@@ -5,48 +5,70 @@ const { URL, KEY } = process.env;
 // Traigo todos los perros
 const getAllDogs = async (req, res) => {
   try {
-    const response = await axios.get(`${URL}?key=${KEY}`);
-    if (response.data.length === 0) {
-      throw new Error(`Hubo un error en la petición a la Api`);
-    }
-    const dogs = response.data.map(
+    //Busqueda en la Api
+    const apiDogsRaw = (await axios.get(`${URL}?key=${KEY}`)).data;
+    //Busqueda en la BDD
+    const bddRaw = await Dog.findAll();
+
+    const dogs = apiDogsRaw.map(
       ({ id, name, image, height, weight, life_span }) => ({
         id,
         name,
         image: image.url,
+        height: height.metric,
+        weight: weight.metric,
+        life_span,
+      })
+    );
+
+    const bdd = bddRaw.map(
+      ({ id, name, image, height, weight, life_span }) => ({
+        id,
+        name,
+        image,
         height,
         weight,
         life_span,
       })
     );
-    return dogs;
+    return [...dogs, ...bdd];
   } catch (error) {
     return { error: error.message };
   }
 };
 
 // Pidiendo perros por ID
-const getDogId = async (id) => {
+const getDogId = async (id, source) => {
   try {
-    const response = await axios.get(`${URL}?key=${KEY}`);
-    const search = response.data.find((dog) => dog.id == id);
-
-    if (!search) {
-      // si no se encontró ningún perro con el id dado, respondemos con un error
-      throw new Error(`No se encontró ningún perro con el ID ${id}`);
+    if (source === "api") {
+      const response = await axios.get(`${URL}?key=${KEY}`);
+      const search = response.data.find((dog) => dog.id == id);
+      if (!search) {
+        // si no se encontró ningún perro con el id dado, respondemos con un error
+        throw new Error(
+          `No se encontró ningún perro con el ID ${id} en la API`
+        );
+      } else {
+        return {
+          id: search.id,
+          name: search.name,
+          image: search.image.url,
+          height: search.height.metric,
+          weight: search.weight.metric,
+          life_span: search.life_span,
+          temperament: search.temperament,
+        };
+      }
+    } else {
+      const search = await Dog.findByPk(id);
+      if (!search) {
+        throw new Error(
+          `No se encontró ningún perro con el ID ${id} en la BDD`
+        );
+      } else {
+        return search;
+      }
     }
-
-    const dogId = {
-      id: search.id,
-      name: search.name,
-      image: search.image.url,
-      height: search.height,
-      weight: search.weight,
-      life_span: search.life_span,
-      temperament: search.temperament,
-    };
-
-    return dogId;
   } catch (error) {
     return { error: error.message };
   }
