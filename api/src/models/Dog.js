@@ -5,16 +5,16 @@ module.exports = (sequelize) => {
   // defino el modelo
   sequelize.define('Dog', {
     id:{
-      type:DataTypes.INTEGER,
-      autoIncrement:true,
-      primaryKey:true
+      type:DataTypes.UUID,
+      primaryKey:true,
+      defaultValue: DataTypes.UUIDV4
     },
     name: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       unique:true,
       allowNull: false,
     },
-    img:{
+    image:{
      type: DataTypes.STRING,
     },
     height:{
