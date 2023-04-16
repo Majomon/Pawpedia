@@ -11,8 +11,6 @@ const getDogHandler = async (req, res) => {
 
 const getDogHanlderQuery = async (req, res) => {
   const { name } = req.query;
-  const source= isNaN(id)?"bdd":"api"
-
   try {
     const dogName = await getDogName(name);
     res.status(200).json(dogName);
